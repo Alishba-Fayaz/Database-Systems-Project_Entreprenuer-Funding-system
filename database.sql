@@ -88,43 +88,94 @@ CREATE TABLE IF NOT EXISTS FUNDING_TRACKER (
         ON UPDATE CASCADE
 );
 
--- ============================================
--- SEED DATA
--- ============================================
+-- SEED DATA - Roles
+INSERT IGNORE INTO ROLE (role_id, role_name) VALUES
+(1, 'Ordinary User'),
+(2, 'Entrepreneur'),
+(3, 'Investor');
 
--- Insert default roles
-INSERT IGNORE INTO ROLE (role_name) VALUES ('Ordinary User'), ('Entrepreneur'), ('Investor');
+-- SEED DATA - Categories
+INSERT IGNORE INTO CATEGORY (category_id, category_name) VALUES
+(1,  'Technology'),
+(2,  'Healthcare'),
+(3,  'Education'),
+(4,  'Agriculture'),
+(5,  'Finance'),
+(6,  'Energy'),
+(7,  'Real Estate'),
+(8,  'E-Commerce'),
+(9,  'Food & Beverage'),
+(10, 'Entertainment');
 
--- Insert default categories
-INSERT IGNORE INTO CATEGORY (category_name) VALUES
-('Technology'), ('Healthcare'), ('Education'), ('Agriculture'),
-('Finance'), ('Energy'), ('Real Estate'), ('E-Commerce'),
-('Food & Beverage'), ('Entertainment');
+-- SEED DATA - Users (passwords stored as plain text)
+-- Ordinary Users: role_id = 1
+-- Entrepreneurs:  role_id = 2
+-- Investors:      role_id = 3
+INSERT IGNORE INTO USERS (user_id, name, email, password, role_id) VALUES
+-- Ordinary Users
+(1,  'Ali Hassan',       'ali@example.com',     'ali123',       1),
+(2,  'Sara Khan',        'sara@example.com',    'sara123',      1),
+-- Entrepreneurs
+(3,  'Ahmed Raza',       'ahmed@example.com',   'ahmed123',     2),
+(4,  'Fatima Malik',     'fatima@example.com',  'fatima123',    2),
+(5,  'Usman Tariq',      'usman@example.com',   'usman123',     2),
+-- Investors
+(6,  'Bilal Sheikh',     'bilal@example.com',   'bilal123',     3),
+(7,  'Zainab Hussain',   'zainab@example.com',  'zainab123',    3),
+(8,  'Omar Farooq',      'omar@example.com',    'omar123',      3);
 
--- ============================================
--- TRIGGERS: Auto-manage FUNDING_TRACKER
--- ============================================
+-- ============================================================
+-- SEED DATA - Projects
+-- ============================================================
+INSERT IGNORE INTO PROJECT (project_id, title, description, funding_goal, deadline, status, entrepreneur_id, category_id) VALUES
+(1, 'EduBot AI Tutor',
+    'An AI-powered tutoring platform for school students in Pakistan. It provides personalized lessons in Math, Science and English.',
+    500000.00, '2025-12-31', 'Active', 3, 1),
 
-DELIMITER //
+(2, 'GreenFarm IoT',
+    'Smart sensors for small farms to monitor soil, water, and weather. Helps farmers increase crop yield by 30 percent.',
+    750000.00, '2025-11-30', 'Active', 3, 4),
 
--- When a new investment is made, update funding tracker
-CREATE TRIGGER IF NOT EXISTS after_investment_insert
-AFTER INSERT ON INVESTMENT
-FOR EACH ROW
-BEGIN
-    DECLARE goal DECIMAL(12,2);
-    SELECT funding_goal INTO goal FROM PROJECT WHERE project_id = NEW.project_id;
+(3, 'MediConnect App',
+    'A telemedicine mobile app connecting rural patients with certified doctors. Includes prescription and lab test booking.',
+    1200000.00, '2025-10-15', 'Active', 4, 2),
 
-    INSERT INTO FUNDING_TRACKER (project_id, total_collected, remaining_amount)
-    VALUES (NEW.project_id, NEW.amount, goal - NEW.amount)
-    ON DUPLICATE KEY UPDATE
-        total_collected = total_collected + NEW.amount,
-        remaining_amount = goal - (total_collected + NEW.amount);
+(4, 'SolarGrid Pakistan',
+    'Affordable solar panel installation service for middle-income households. Pay in monthly installments over 3 years.',
+    2000000.00, '2025-09-30', 'Funded', 4, 6),
 
-    -- Auto-update project status if fully funded
-    UPDATE PROJECT SET status = 'Funded'
-    WHERE project_id = NEW.project_id
-    AND (SELECT total_collected FROM FUNDING_TRACKER WHERE project_id = NEW.project_id) >= funding_goal;
-END//
+(5, 'LocalBazaar Online',
+    'An e-commerce platform connecting local artisans and small shop owners across Pakistan to online buyers.',
+    600000.00, '2026-01-31', 'Active', 5, 8),
 
-DELIMITER ;
+(6, 'CookCloud Kitchen',
+    'A cloud kitchen startup offering home-cooked meal delivery service in Lahore. Franchise model after 6 months.',
+    400000.00, '2025-08-31', 'Active', 5, 9);
+
+-- SEED DATA - Investments
+INSERT IGNORE INTO INVESTMENT (investment_id, amount, project_id, investor_id) VALUES
+(1,  150000.00, 1, 6),
+(2,  200000.00, 1, 7),
+(3,  100000.00, 2, 6),
+(4,  300000.00, 2, 8),
+(5,  500000.00, 3, 7),
+(6,  250000.00, 4, 6),
+(7,  750000.00, 4, 7),
+(8, 1000000.00, 4, 8),
+(9,  200000.00, 5, 6),
+(10, 100000.00, 6, 7);
+
+-- SEED DATA - Funding Tracker
+-- (total_collected = sum of investments per project)
+INSERT IGNORE INTO FUNDING_TRACKER (project_id, total_collected, remaining_amount) VALUES
+(1,  350000.00,  150000.00),
+(2,  400000.00,  350000.00),
+(3,  500000.00,  700000.00),
+(4, 2000000.00,       0.00),
+(5,  200000.00,  400000.00),
+(6,  100000.00,  300000.00);
+
+-- SEED DATA - Verifications (for ordinary users)
+INSERT IGNORE INTO VERIFICATION (user_id, id_type, id_number, status) VALUES
+(1, 'CNIC', '35202-1234567-1', 'Approved'),
+(2, 'CNIC', '35202-7654321-9', 'Pending');
