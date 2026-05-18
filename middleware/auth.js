@@ -1,19 +1,24 @@
-// Middleware to check if user is authenticated
+// middleware/auth.js
+// Checks if the user is logged in before allowing access to
+// protected API routes. If not logged in, returns 401.
+
+// Check if user is logged in (any role)
 function requireAuth(req, res, next) {
     if (!req.session || !req.session.user) {
-        return res.status(401).json({ success: false, message: 'Unauthorized. Please log in.' });
+        return res.status(401).json({ success: false, message: 'Not logged in. Please sign in first.' });
     }
     next();
 }
 
-// Middleware to check role
-function requireRole(...roles) {
+// Check if logged-in user has the correct role
+// Usage: requireRole(2) for Entrepreneur, requireRole(3) for Investor, etc.
+function requireRole(roleId) {
     return (req, res, next) => {
         if (!req.session || !req.session.user) {
-            return res.status(401).json({ success: false, message: 'Unauthorized.' });
+            return res.status(401).json({ success: false, message: 'Not logged in.' });
         }
-        if (!roles.includes(req.session.user.role_id)) {
-            return res.status(403).json({ success: false, message: 'Forbidden. Insufficient permissions.' });
+        if (req.session.user.role_id !== roleId) {
+            return res.status(403).json({ success: false, message: 'Access denied. Wrong role.' });
         }
         next();
     };
