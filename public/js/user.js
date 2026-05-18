@@ -1,33 +1,29 @@
-// ============================================
-// VentureFlow — Ordinary User Dashboard
-// ============================================
+// user.js — Ordinary User Dashboard Logic
 
-let currentUser = null;
-let categories = [];
-let selectedProjectId = null;
+let categories      = [];
+let browsePage      = 1;
+let histPage        = 1;
+let selectedProject = null;
+const PAGE_SIZE     = 6;
 
-(async () => {
+let verificationData = null;
+
+window.addEventListener('load', async () => {
     await checkAuth();
-    await loadVerificationStatus();
     await loadCategories();
-    await loadFeaturedProjects();
+    await loadVerification();
     await loadOverviewStats();
-})();
+    await loadFeatured();
+});
 
 async function checkAuth() {
     try {
-        const res = await fetch('/api/auth/me');
+        const res  = await fetch('/api/auth/me');
         const data = await res.json();
-        if (!data.success || data.user.role_id !== 1) {
-            window.location.href = '/';
-            return;
-        }
-        currentUser = data.user;
-        document.getElementById('sidebarName').textContent = currentUser.name;
-        document.getElementById('sidebarAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
-    } catch (e) {
-        window.location.href = '/';
-    }
+        if (!data.success || data.user.role_id !== 1) { window.location.href = '/'; return; }
+        document.getElementById('sideName').textContent   = data.user.name;
+        document.getElementById('sideAvatar').textContent = data.user.name[0].toUpperCase();
+    } catch (e) { window.location.href = '/'; }
 }
 
 async function logout() {
@@ -35,281 +31,344 @@ async function logout() {
     window.location.href = '/';
 }
 
-function navigate(section) {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+// ---- Navigation ----
+function nav(el, secId) {
+    document.querySelectorAll('.section').forEach(s  => s.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('sec-' + section).classList.add('active');
-    event.currentTarget.classList.add('active');
-    const titles = {
-        overview: 'Overview', verification: 'Identity Verification',
-        browse: 'Browse Projects', history: 'My Contributions'
-    };
-    document.getElementById('topbarTitle').textContent = titles[section] || section;
-    if (section === 'verification') loadVerificationStatus();
-    if (section === 'browse') loadBrowseProjects();
-    if (section === 'history') loadHistory();
+    document.getElementById('sec-' + secId).classList.add('active');
+    el.classList.add('active');
+    const titles = { overview:'Overview', verification:'Identity Verification', browse:'Browse Projects', history:'My Contributions' };
+    document.getElementById('topTitle').textContent = titles[secId] || secId;
+    if (secId === 'browse')       { browsePage = 1; loadBrowse(); }
+    if (secId === 'history')      { histPage   = 1; loadHistory(); }
+    if (secId === 'verification') { renderVerSection(); }
 }
 
-async function loadVerificationStatus() {
-    const statusDiv = document.getElementById('verificationStatus');
-    if (!statusDiv) return;
-    try {
-        const res = await fetch('/api/user/verification');
-        const data = await res.json();
-        const v = data.verification;
-        const badge = document.getElementById('verificationBadge');
-        const statEl = document.getElementById('stat-verify-status');
-        const nudge = document.getElementById('verificationNudge');
-        const formPanel = document.getElementById('verificationFormPanel');
+function navByName(secId) {
+    const el = document.querySelector(`[data-sec="${secId}"]`);
+    if (el) nav(el, secId);
+}
 
-        if (!v) {
-            statusDiv.innerHTML = buildVerificationCard('none', '🪪', 'Not Submitted', 'You have not submitted any verification details yet.');
-            if (badge) badge.innerHTML = '<span style="color:var(--red);background:var(--red-dim);padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;">⚠ Unverified</span>';
-            if (statEl) statEl.textContent = 'Unverified';
-            if (nudge) nudge.style.display = 'block';
-            if (formPanel) formPanel.style.display = 'block';
-        } else if (v.status === 'Pending') {
-            statusDiv.innerHTML = buildVerificationCard('pending', '⏳', 'Pending Review', 'Your ' + v.id_type + ' (' + v.id_number + ') is under review.');
-            if (badge) badge.innerHTML = '<span style="color:var(--gold);background:var(--gold-soft);padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;">⏳ Pending</span>';
-            if (statEl) statEl.textContent = 'Pending';
-            if (formPanel) formPanel.style.display = 'block';
-        } else if (v.status === 'Approved') {
-            statusDiv.innerHTML = buildVerificationCard('approved', '✅', 'Verified', 'Your ' + v.id_type + ' has been approved. You have full platform access.');
-            if (badge) badge.innerHTML = '<span style="color:var(--green);background:var(--green-dim);padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;">✅ Verified</span>';
-            if (statEl) statEl.textContent = 'Verified';
-            if (nudge) nudge.style.display = 'none';
-            if (formPanel) formPanel.style.display = 'none';
-        } else if (v.status === 'Rejected') {
-            statusDiv.innerHTML = buildVerificationCard('rejected', '❌', 'Rejected', 'Your verification was rejected. Please re-submit with correct details.');
-            if (badge) badge.innerHTML = '<span style="color:var(--red);background:var(--red-dim);padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;">❌ Rejected</span>';
-            if (statEl) statEl.textContent = 'Rejected';
-            if (formPanel) formPanel.style.display = 'block';
+// ---- Verification: READ ----
+async function loadVerification() {
+    const data = await api('/api/user/verification');
+    verificationData = data.success ? data.verification : null;
+    updateVerBadge();
+}
+
+function updateVerBadge() {
+    const badge = document.getElementById('verBadge');
+    const nudge = document.getElementById('verNudge');
+    const stEl  = document.getElementById('st-vstatus');
+
+    if (!verificationData) {
+        badge.innerHTML = '<span style="color:var(--red);font-weight:600;">⚠️ Not Verified</span>';
+        if (nudge) nudge.style.display = 'block';
+        if (stEl)  stEl.textContent    = 'None';
+    } else {
+        const s = verificationData.status;
+        const colors = { Pending:'var(--gold)', Approved:'var(--green)', Rejected:'var(--red)' };
+        const icons  = { Pending:'⏳', Approved:'✅', Rejected:'❌' };
+        badge.innerHTML = `<span style="color:${colors[s]};font-weight:600;">${icons[s]} ${s}</span>`;
+        if (nudge) nudge.style.display = (s === 'Approved') ? 'none' : 'block';
+        if (stEl)  stEl.textContent = s;
+    }
+}
+
+// Render the verification section based on current data
+function renderVerSection() {
+    const statusCard  = document.getElementById('verStatusCard');
+    const submitPanel = document.getElementById('verSubmitPanel');
+    const updatePanel = document.getElementById('verUpdatePanel');
+
+    if (!verificationData) {
+        // No record — show status card + submit form (CREATE)
+        statusCard.innerHTML = `
+            <div class="verify-status-card">
+                <div class="verify-icon none">🪪</div>
+                <div class="verify-info">
+                    <h3>Not Verified</h3>
+                    <p>You have not submitted any verification details yet. Fill the form below.</p>
+                </div>
+            </div>`;
+        submitPanel.style.display = 'block';
+        updatePanel.style.display = 'none';
+    } else {
+        const s = verificationData.status;
+        const icons   = { Pending:'⏳', Approved:'✅', Rejected:'❌' };
+        const classes = { Pending:'pending', Approved:'approved', Rejected:'rejected' };
+        const msgs    = {
+            Pending:  'Your verification is under review. This usually takes 1–3 business days.',
+            Approved: 'Your identity has been verified. Full access granted.',
+            Rejected: 'Your verification was rejected. Please resubmit with correct information.'
+        };
+        statusCard.innerHTML = `
+            <div class="verify-status-card">
+                <div class="verify-icon ${classes[s]}">${icons[s]}</div>
+                <div class="verify-info">
+                    <h3>Status: ${s}</h3>
+                    <p>${msgs[s]}</p>
+                    <p style="margin-top:5px;font-size:0.78rem;color:var(--text-3);">
+                        ${verificationData.id_type} · ${maskId(verificationData.id_number)} · Submitted: ${fmtDate(verificationData.submitted_at)}
+                    </p>
+                </div>
+            </div>`;
+
+        // Show UPDATE form if not Approved (allow corrections), hide SUBMIT form
+        submitPanel.style.display = 'none';
+        updatePanel.style.display = (s !== 'Approved') ? 'block' : 'none';
+        if (s === 'Rejected') {
+            document.getElementById('verUpdateTitle').textContent = '🔄 Resubmit Verification';
         }
-    } catch (e) { console.error(e); }
+        // Pre-fill update form
+        document.getElementById('updIdType').value   = verificationData.id_type;
+        document.getElementById('updIdNumber').value = verificationData.id_number;
+    }
 }
 
-function buildVerificationCard(type, icon, title, desc) {
-    return '<div class="verification-card"><div class="verification-icon ' + type + '">' + icon + '</div><div class="verification-info"><h3>' + title + '</h3><p>' + desc + '</p></div></div>';
-}
-
+// CRUD: CREATE verification
 async function submitVerification() {
-    const id_type = document.getElementById('idType').value;
+    const id_type   = document.getElementById('idType').value;
     const id_number = document.getElementById('idNumber').value.trim();
     if (!id_type || !id_number) {
-        showAlert('verifyAlert', 'Please select an ID type and enter your ID number.', 'error');
+        return alert2('verSubmitAlert', 'Please select ID type and enter ID number.', 'error');
+    }
+    setBtn('verSubmitBtn', true);
+    const data = await api('/api/user/verification', 'POST', { id_type, id_number });
+    setBtn('verSubmitBtn', false, 'Submit for Review');
+    if (data.success) {
+        alert2('verSubmitAlert', data.message, 'success');
+        await loadVerification();
+        setTimeout(() => renderVerSection(), 600);
+    } else {
+        alert2('verSubmitAlert', data.message, 'error');
+    }
+}
+
+// CRUD: UPDATE verification
+async function updateVerification() {
+    const id_type   = document.getElementById('updIdType').value;
+    const id_number = document.getElementById('updIdNumber').value.trim();
+    if (!id_type || !id_number) {
+        return alert2('verUpdateAlert', 'Please fill both fields.', 'error');
+    }
+    setBtn('verUpdateBtn', true);
+    const data = await api('/api/user/verification', 'PUT', { id_type, id_number });
+    setBtn('verUpdateBtn', false, 'Update Details');
+    if (data.success) {
+        alert2('verUpdateAlert', data.message, 'success');
+        await loadVerification();
+        setTimeout(() => renderVerSection(), 600);
+    } else {
+        alert2('verUpdateAlert', data.message, 'error');
+    }
+}
+
+// ---- Categories ----
+async function loadCategories() {
+    if (categories.length) return;
+    const data = await api('/api/common/categories');
+    if (data.success) {
+        categories = data.categories;
+        const sel = document.getElementById('browseCat');
+        categories.forEach(c => {
+            const o = document.createElement('option');
+            o.value = c.category_id; o.textContent = c.category_name;
+            sel.appendChild(o);
+        });
+    }
+}
+
+// ---- Overview Stats ----
+async function loadOverviewStats() {
+    const data = await api('/api/user/history?page=1&limit=100');
+    if (data.success && data.history.length) {
+        const total    = data.history.reduce((sum, h) => sum + parseFloat(h.amount), 0);
+        const projects = new Set(data.history.map(h => h.project_title)).size;
+        document.getElementById('st-contributed').textContent = 'PKR ' + fmt(total);
+        document.getElementById('st-supported').textContent   = projects;
+    }
+}
+
+// ---- Featured Projects (READ, 3 cards) ----
+async function loadFeatured() {
+    const grid = document.getElementById('featuredGrid');
+    const data = await api('/api/user/projects?page=1&limit=3');
+    if (!data.success || !data.projects.length) {
+        grid.innerHTML = emptyState('🚀', 'No active projects right now. Check back soon!');
         return;
     }
-    const btn = document.getElementById('verifyBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>';
-    try {
-        const res = await fetch('/api/user/verification', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id_type, id_number })
-        });
-        const data = await res.json();
-        if (data.success) {
-            showAlert('verifyAlert', data.message, 'success');
-            await loadVerificationStatus();
-        } else {
-            showAlert('verifyAlert', data.message, 'error');
-        }
-    } catch (e) {
-        showAlert('verifyAlert', 'Server error.', 'error');
+    grid.innerHTML = data.projects.map(p => projectCard(p)).join('');
+}
+
+// ---- Browse Projects (READ, paginated) ----
+async function loadBrowse() {
+    const container = document.getElementById('browseContainer');
+    container.innerHTML = '<div class="load-center"><div class="spinner"></div></div>';
+
+    const title       = document.getElementById('browseTitle').value.trim();
+    const category_id = document.getElementById('browseCat').value;
+    let url = `/api/user/projects?page=${browsePage}&limit=${PAGE_SIZE}`;
+    if (title)       url += `&title=${encodeURIComponent(title)}`;
+    if (category_id) url += `&category_id=${encodeURIComponent(category_id)}`;
+
+    const data = await api(url);
+    if (!data.success || !data.projects.length) {
+        container.innerHTML = emptyState('🔍', 'No projects found. Try different filters.');
+        return;
     }
-    btn.disabled = false;
-    btn.innerHTML = 'Submit for Review';
+
+    const grid = data.projects.map(p => projectCard(p)).join('');
+    const pag  = buildPagination(data.total, browsePage, PAGE_SIZE, 'browsePage', 'loadBrowse');
+    container.innerHTML = `<div class="projects-grid">${grid}</div>${pag}`;
 }
 
-async function loadCategories() {
-    if (categories.length > 0) return;
-    try {
-        const res = await fetch('/api/common/categories');
-        const data = await res.json();
-        if (data.success) {
-            categories = data.categories;
-            const sel = document.getElementById('browseCategory');
-            if (!sel) return;
-            categories.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.category_id;
-                opt.textContent = c.category_name;
-                sel.appendChild(opt);
-            });
-        }
-    } catch (e) { console.error(e); }
-}
-
-async function loadOverviewStats() {
-    try {
-        const res = await fetch('/api/user/history');
-        const data = await res.json();
-        if (data.success) {
-            const total = data.history.reduce((sum, i) => sum + parseFloat(i.amount), 0);
-            const projects = new Set(data.history.map(i => i.project_title)).size;
-            document.getElementById('stat-contributed').textContent = 'PKR ' + formatCurrency(total);
-            document.getElementById('stat-projects-supported').textContent = projects;
-        }
-    } catch (e) { console.error(e); }
-}
-
-async function loadFeaturedProjects() {
-    const container = document.getElementById('featuredProjects');
-    try {
-        const res = await fetch('/api/user/projects');
-        const data = await res.json();
-        if (!data.success || data.projects.length === 0) {
-            container.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><span class="empty-icon">🌐</span><p>No active projects at the moment.</p></div>';
-            return;
-        }
-        container.innerHTML = data.projects.slice(0, 3).map(p => renderProjectCard(p)).join('');
-    } catch (e) {
-        container.innerHTML = '<div class="text-dim" style="grid-column:1/-1">Failed to load.</div>';
-    }
-}
-
-async function loadBrowseProjects(params) {
-    params = params || {};
-    const container = document.getElementById('browseGrid');
-    container.innerHTML = '<div class="loading-center" style="grid-column:1/-1"><div class="spinner"></div></div>';
-    try {
-        const query = new URLSearchParams(params).toString();
-        const res = await fetch('/api/user/projects?' + query);
-        const data = await res.json();
-        if (!data.success || data.projects.length === 0) {
-            container.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><span class="empty-icon">🔍</span><p>No projects found.</p></div>';
-            return;
-        }
-        container.innerHTML = data.projects.map(p => renderProjectCard(p)).join('');
-    } catch (e) {
-        container.innerHTML = '<div class="text-dim" style="grid-column:1/-1">Failed to load.</div>';
-    }
-}
-
-function browseProjects() {
-    const title = document.getElementById('browseSearch').value.trim();
-    const category_id = document.getElementById('browseCategory').value;
-    const params = {};
-    if (title) params.title = title;
-    if (category_id) params.category_id = category_id;
-    loadBrowseProjects(params);
-}
-
+function doBrowse()   { browsePage = 1; loadBrowse(); }
 function clearBrowse() {
-    document.getElementById('browseSearch').value = '';
-    document.getElementById('browseCategory').value = '';
-    loadBrowseProjects();
+    document.getElementById('browseTitle').value = '';
+    document.getElementById('browseCat').value   = '';
+    browsePage = 1; loadBrowse();
 }
 
-function renderProjectCard(p) {
+function projectCard(p) {
     const pct = Math.min(100, parseFloat(p.percent_funded) || 0);
-    return '<div class="project-card">' +
-        '<div class="project-card-top"><span class="project-category-tag">' + escHtml(p.category_name) + '</span><span class="status-badge active">Active</span></div>' +
-        '<div class="project-title">' + escHtml(p.title) + '</div>' +
-        '<div class="project-desc">' + escHtml(p.description || 'No description provided.') + '</div>' +
-        '<div class="project-entrepreneur">👤 By ' + escHtml(p.entrepreneur_name) + '</div>' +
-        '<div class="progress-section"><div class="progress-meta"><span class="progress-amount">PKR ' + formatCurrency(p.total_collected) + '</span><span class="progress-pct">' + pct + '%</span></div>' +
-        '<div class="progress-bar"><div class="progress-fill ' + (pct >= 100 ? 'full' : '') + '" style="width:' + pct + '%"></div></div></div>' +
-        '<div class="project-footer" style="margin-bottom:14px;"><span class="project-deadline">📅 ' + formatDate(p.deadline) + '</span><span class="project-goal">Goal: <span>PKR ' + formatCurrency(p.funding_goal) + '</span></span></div>' +
-        '<button class="btn btn-primary" style="width:100%;" onclick="openFundModal(' + p.project_id + ', \'' + escHtml(p.title) + '\', ' + p.funding_goal + ', ' + p.total_collected + ', ' + pct + ')">🌱 Support Project</button>' +
-        '</div>';
+    return `
+    <div class="project-card">
+        <div class="pc-top">
+            <span class="tag tag-cat">${esc(p.category_name)}</span>
+            <span class="tag tag-active">Active</span>
+        </div>
+        <div class="pc-title">${esc(p.title)}</div>
+        <div class="pc-desc">${esc(p.description || 'No description provided.')}</div>
+        <div class="pc-by">👤 ${esc(p.entrepreneur_name)}</div>
+        <div class="progress-wrap">
+            <div class="progress-meta">
+                <span class="progress-raised">PKR ${fmt(p.total_collected)}</span>
+                <span class="progress-pct">${pct}%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill ${pct>=100?'done':''}" style="width:${pct}%"></div>
+            </div>
+        </div>
+        <div class="pc-footer">
+            <span>📅 ${fmtDate(p.deadline)}</span>
+            <span class="pc-goal">Goal: <span>PKR ${fmt(p.funding_goal)}</span></span>
+        </div>
+        <button class="btn btn-primary" style="width:100%;margin-top:8px;"
+            onclick="openFund(${p.project_id},'${esc(p.title)}',${p.funding_goal},${p.total_collected},${pct})">
+            🌱 Support Project
+        </button>
+    </div>`;
 }
 
-async function loadHistory() {
-    const tbody = document.getElementById('historyBody');
-    tbody.innerHTML = '<tr><td colspan="5"><div class="loading-center"><div class="spinner"></div></div></td></tr>';
-    try {
-        const res = await fetch('/api/user/history');
-        const data = await res.json();
-        if (!data.success || data.history.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><span class="empty-icon">📜</span><p>No contributions yet.</p></div></td></tr>';
-            return;
-        }
-        tbody.innerHTML = data.history.map(i =>
-            '<tr><td class="td-main">' + escHtml(i.project_title) + '</td>' +
-            '<td>' + escHtml(i.category_name) + '</td>' +
-            '<td class="td-gold">' + formatCurrency(i.amount) + '</td>' +
-            '<td><span class="status-badge ' + i.project_status.toLowerCase() + '">' + i.project_status + '</span></td>' +
-            '<td>' + formatDate(i.invested_at) + '</td></tr>'
-        ).join('');
-    } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-dim">Failed to load.</td></tr>';
-    }
-}
-
-function openFundModal(projectId, title, goal, collected, pct) {
-    selectedProjectId = projectId;
-    document.getElementById('fundProjectInfo').innerHTML =
-        '<div class="project-title" style="margin-bottom:8px;">' + escHtml(title) + '</div>' +
-        '<div style="margin-bottom:8px;"><div class="progress-meta"><span style="font-size:0.85rem;color:var(--text-2);">PKR ' + formatCurrency(collected) + ' raised</span><span class="progress-pct">' + pct + '%</span></div>' +
-        '<div class="progress-bar" style="margin-top:6px;"><div class="progress-fill" style="width:' + pct + '%"></div></div></div>' +
-        '<div style="font-size:0.82rem;color:var(--text-3);">Goal: <strong style="color:var(--text);">PKR ' + formatCurrency(goal) + '</strong> &nbsp;|&nbsp; Remaining: <strong style="color:var(--gold);">PKR ' + formatCurrency(parseFloat(goal) - parseFloat(collected)) + '</strong></div>';
-    document.getElementById('fundAmount').value = '';
+// ---- Fund Modal (CREATE investment) ----
+function openFund(projectId, title, goal, collected, pct) {
+    selectedProject = { projectId, title, goal, collected };
+    document.getElementById('fundInfo').innerHTML = `
+        <strong>${esc(title)}</strong><br>
+        PKR ${fmt(collected)} raised of PKR ${fmt(goal)} &nbsp;·&nbsp; ${pct}%<br>
+        <div class="progress-bar" style="margin-top:7px;">
+            <div class="progress-fill" style="width:${pct}%"></div>
+        </div>`;
+    document.getElementById('fundAmt').value = '';
     document.getElementById('fundAlert').classList.remove('show');
     document.getElementById('fundModal').classList.add('show');
 }
 
-function closeFundModal() {
-    document.getElementById('fundModal').classList.remove('show');
-    selectedProjectId = null;
+async function confirmFund() {
+    const amount = document.getElementById('fundAmt').value;
+    if (!amount || parseFloat(amount) <= 0) {
+        return alert2('fundAlert', 'Please enter a valid amount.', 'error');
+    }
+    setBtn('fundBtn', true);
+    const data = await api('/api/user/fund', 'POST', { project_id: selectedProject.projectId, amount });
+    setBtn('fundBtn', false, 'Confirm Contribution');
+    if (data.success) {
+        alert2('fundAlert', data.message, 'success');
+        setTimeout(() => {
+            closeModal('fundModal');
+            loadOverviewStats();
+            loadFeatured();
+            if (document.getElementById('sec-browse').classList.contains('active')) loadBrowse();
+        }, 1000);
+    } else {
+        alert2('fundAlert', data.message, 'error');
+    }
 }
 
-document.getElementById('fundModal').addEventListener('click', function(e) {
-    if (e.target === e.currentTarget) closeFundModal();
-});
+// ---- History (READ, paginated) ----
+async function loadHistory() {
+    const tbody = document.getElementById('histBody');
+    tbody.innerHTML = `<tr><td colspan="6"><div class="load-center"><div class="spinner"></div></div></td></tr>`;
 
-async function confirmFund() {
-    const amount = document.getElementById('fundAmount').value;
-    if (!amount || parseFloat(amount) <= 0) {
-        showAlert('fundAlert', 'Please enter a valid contribution amount.', 'error');
+    const data = await api(`/api/user/history?page=${histPage}&limit=5`);
+
+    if (!data.success || !data.history.length) {
+        tbody.innerHTML = `<tr><td colspan="6">${emptyState('📜','No contributions yet. Browse projects and support one!')}</td></tr>`;
+        document.getElementById('histPag').innerHTML = '';
         return;
     }
-    const btn = document.getElementById('confirmFundBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>';
-    try {
-        const res = await fetch('/api/user/fund', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ project_id: selectedProjectId, amount: amount })
-        });
-        const data = await res.json();
-        if (data.success) {
-            showAlert('fundAlert', data.message, 'success');
-            setTimeout(function() {
-                closeFundModal();
-                loadOverviewStats();
-                loadFeaturedProjects();
-            }, 1500);
-        } else {
-            showAlert('fundAlert', data.message, 'error');
-        }
-    } catch (e) {
-        showAlert('fundAlert', 'Server error.', 'error');
-    }
-    btn.disabled = false;
-    btn.innerHTML = 'Confirm Contribution';
+
+    const stTag = { Active:'tag-active', Funded:'tag-funded', Closed:'tag-closed' };
+    tbody.innerHTML = data.history.map((h, idx) => {
+        const row = (histPage - 1) * 5 + idx + 1;
+        return `<tr>
+            <td class="txt-dim">${row}</td>
+            <td class="td-main">${esc(h.project_title)}</td>
+            <td>${esc(h.category_name)}</td>
+            <td class="td-blue">${fmt(h.amount)}</td>
+            <td><span class="tag ${stTag[h.project_status]||'tag-closed'}">${h.project_status}</span></td>
+            <td>${fmtDate(h.invested_at)}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('histPag').innerHTML =
+        buildPagination(data.total, histPage, 5, 'histPage', 'loadHistory');
 }
 
-function showAlert(id, message, type) {
-    type = type || 'error';
+// ---- Helpers ----
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); });
+});
+
+async function api(url, method = 'GET', body = null) {
+    const opts = { method, headers: {} };
+    if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+    try { const r = await fetch(url, opts); return await r.json(); }
+    catch (e) { return { success: false, message: 'Network error.' }; }
+}
+
+function buildPagination(total, current, limit, pageVar, loadFn) {
+    const pages = Math.ceil(total / limit);
+    if (pages <= 1) return '';
+    let html = `<div class="pagination">`;
+    html += `<button class="page-btn" ${current<=1?'disabled':''} onclick="${pageVar}=${current-1};${loadFn}()">‹</button>`;
+    for (let i = 1; i <= pages; i++)
+        html += `<button class="page-btn ${i===current?'active':''}" onclick="${pageVar}=${i};${loadFn}()">${i}</button>`;
+    html += `<button class="page-btn" ${current>=pages?'disabled':''} onclick="${pageVar}=${current+1};${loadFn}()">›</button>`;
+    html += `<span class="page-info">Page ${current} of ${pages} · ${total} records</span></div>`;
+    return html;
+}
+
+function emptyState(icon, msg) { return `<div class="empty-state"><span class="ei">${icon}</span><p>${msg}</p></div>`; }
+
+function alert2(id, msg, type) {
     const el = document.getElementById(id);
-    el.className = 'alert alert-' + type + ' show';
-    el.innerHTML = (type === 'error' ? '⚠️ ' : '✅ ') + message;
-    setTimeout(function() { el.classList.remove('show'); }, 5000);
+    el.className = `alert alert-${type} show`;
+    el.textContent = msg;
+    setTimeout(() => el.classList.remove('show'), 5000);
 }
 
-function formatCurrency(val) {
-    return parseFloat(val || 0).toLocaleString('en-PK', { minimumFractionDigits: 0 });
+function setBtn(id, loading, label='') {
+    const b = document.getElementById(id);
+    b.disabled = loading; b.innerHTML = loading ? '<span class="spinner"></span>' : label;
 }
 
-function formatDate(dateStr) {
-    if (!dateStr) return '—';
-    return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-}
-
-function escHtml(str) {
-    if (str === null || str === undefined) return '';
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+function fmt(v) { return parseFloat(v||0).toLocaleString('en-PK', {minimumFractionDigits:0}); }
+function fmtDate(d) { if(!d) return '—'; return new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+function maskId(id) { if(!id||id.length<6) return id; return id.slice(0,4)+'****'+id.slice(-3); }
+function esc(s) {
+    if (s==null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
