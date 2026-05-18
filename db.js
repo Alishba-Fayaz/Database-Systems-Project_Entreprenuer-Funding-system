@@ -1,27 +1,26 @@
+// db.js - Database Connection
+
 const mysql = require('mysql2');
 
+// Create a connection pool (handles multiple requests efficiently)
 const pool = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: '',          // Default XAMPP password is empty
+    host:     'localhost',
+    user:     'root',
+    password: '',                       // Default XAMPP MySQL password is empty
     database: 'entrepreneur_funding',
-    port: 3306,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+    port:     3306
 });
 
-const promisePool = pool.promise();
-
-// Test connection on startup
+// Test the connection when the server starts
 pool.getConnection((err, connection) => {
     if (err) {
-        console.error('Database connection failed:', err.message);
-        console.error('   Make sure XAMPP MySQL is running and database is created.');
+        console.error('Database connection FAILED:', err.message);
+        console.error('Make sure XAMPP MySQL is running and database.sql has been imported.');
     } else {
-        console.log('MySQL Database connected successfully.');
+        console.log('MySQL database connected successfully.');
         connection.release();
     }
 });
 
-module.exports = promisePool;
+// Export as promise-based pool so we can use async/await in routes
+module.exports = pool.promise();
