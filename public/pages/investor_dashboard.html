@@ -9,146 +9,135 @@
 <body>
 <div class="dashboard-layout">
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-logo">
-                <div class="logo-icon">💎</div>
-                <span class="logo-name">VentureFlow</span>
-            </div>
-            <div class="sidebar-user-card">
-                <div class="user-avatar" id="sidebarAvatar">I</div>
-                <div class="user-info">
-                    <div class="user-name" id="sidebarName">Loading...</div>
-                    <div class="user-role" style="color:var(--blue);">Investor</div>
-                </div>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+             <div class="auth-logo-icon">
+    <img src="Untitled design.ico" alt="Logo">
+</div>
+            <span class="logo-name">VentureFlow</span>
+        </div>
+        <div class="user-card">
+            <div class="user-avatar" id="sideAvatar" style="background:var(--teal);">I</div>
+            <div>
+                <div class="user-name" id="sideName">Loading...</div>
+                <div class="user-role" style="color:var(--teal);">Investor</div>
             </div>
         </div>
-        <nav class="sidebar-nav">
-            <div class="nav-section-label">Dashboard</div>
-            <div class="nav-item active" onclick="navigate('overview')">
-                <span class="nav-icon">📊</span> Overview
-            </div>
-            <div class="nav-section-label">Investments</div>
-            <div class="nav-item" onclick="navigate('discover')">
-                <span class="nav-icon">🔍</span> Discover Projects
-            </div>
-            <div class="nav-item" onclick="navigate('history')">
-                <span class="nav-icon">📜</span> My Investments
-            </div>
-        </nav>
-        <div class="sidebar-footer">
-            <button class="btn btn-ghost" style="width:100%;" onclick="logout()">
-                🚪 Sign Out
-            </button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-label">Dashboard</div>
+        <div class="nav-item active" data-sec="overview" onclick="nav(this,'overview')">
+            <span class="icon">📊</span> Overview
         </div>
-    </aside>
+        <div class="nav-label">Investments</div>
+        <div class="nav-item" data-sec="discover" onclick="nav(this,'discover')">
+            <span class="icon">🔍</span> Discover Projects
+        </div>
+        <div class="nav-item" data-sec="history" onclick="nav(this,'history')">
+            <span class="icon">📜</span> My Investments
+        </div>
+    </nav>
+    <div class="sidebar-footer">
+        <button class="btn btn-ghost" style="width:100%;" onclick="logout()">🚪 Sign Out</button>
+    </div>
+</aside>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="topbar">
-            <div class="topbar-title" id="topbarTitle">Overview</div>
-            <div class="topbar-actions">
-                <button class="btn btn-primary btn-sm" onclick="navigate('discover')">
-                    🔍 Find Projects
-                </button>
+<!-- MAIN -->
+<main class="main-content">
+    <div class="topbar">
+        <div class="topbar-title" id="topTitle">Overview</div>
+        <div class="topbar-actions">
+            <button class="btn btn-primary btn-sm" onclick="navByName('discover')">🔍 Find Projects</button>
+        </div>
+    </div>
+
+    <div class="page-content">
+
+        <!-- OVERVIEW -->
+        <section class="section active" id="sec-overview">
+            <div class="section-header">
+                <div class="section-title">Investment Overview</div>
+                <div class="section-sub">Your portfolio at a glance.</div>
             </div>
-        </div>
-
-        <div class="page-content">
-
-            <!-- SECTION: Overview -->
-            <section class="section active" id="sec-overview">
-                <div class="section-header">
-                    <h1 class="section-title">Investment Overview</h1>
-                    <p class="section-sub">Your portfolio performance at a glance.</p>
+            <div class="stats-grid">
+                <div class="stat-card blue">
+                    <span class="stat-icon">💵</span>
+                    <div class="stat-value" id="st-invested">—</div>
+                    <div class="stat-label">Total Invested (PKR)</div>
                 </div>
-                <div class="stats-grid">
-                    <div class="stat-card gold">
-                        <span class="stat-icon">💵</span>
-                        <div class="stat-value" id="stat-total-invested">—</div>
-                        <div class="stat-label">Total Invested (PKR)</div>
-                    </div>
-                    <div class="stat-card blue">
-                        <span class="stat-icon">🎯</span>
-                        <div class="stat-value" id="stat-projects-backed">—</div>
-                        <div class="stat-label">Projects Backed</div>
-                    </div>
-                    <div class="stat-card green">
-                        <span class="stat-icon">🏆</span>
-                        <div class="stat-value" id="stat-successful">—</div>
-                        <div class="stat-label">Successful Projects</div>
-                    </div>
-                    <div class="stat-card red">
-                        <span class="stat-icon">📈</span>
-                        <div class="stat-value" id="stat-txns">—</div>
-                        <div class="stat-label">Total Transactions</div>
-                    </div>
+                <div class="stat-card teal">
+                    <span class="stat-icon">🎯</span>
+                    <div class="stat-value" id="st-backed">—</div>
+                    <div class="stat-label">Projects Backed</div>
                 </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">📜 Recent Investments</span>
-                        <button class="btn btn-ghost btn-sm" onclick="navigate('history')">View All →</button>
-                    </div>
-                    <div class="card-body" id="overviewInvestments">
-                        <div class="loading-center"><div class="spinner"></div></div>
-                    </div>
+                <div class="stat-card green">
+                    <span class="stat-icon">🏆</span>
+                    <div class="stat-value" id="st-success">—</div>
+                    <div class="stat-label">Funded Projects</div>
                 </div>
-            </section>
-
-            <!-- SECTION: Discover Projects -->
-            <section class="section" id="sec-discover">
-                <div class="section-header">
-                    <h1 class="section-title">Discover Projects</h1>
-                    <p class="section-sub">Browse and invest in active entrepreneurial projects.</p>
+                <div class="stat-card gold">
+                    <span class="stat-icon">📈</span>
+                    <div class="stat-value" id="st-txns">—</div>
+                    <div class="stat-label">Transactions</div>
                 </div>
-
-                <div class="search-bar">
-                    <input type="text" id="searchTitle" placeholder="🔍  Search by project name...">
-                    <select id="searchCategory">
-                        <option value="">All Categories</option>
-                    </select>
-                    <button class="btn btn-primary btn-sm" onclick="searchProjects()">Search</button>
-                    <button class="btn btn-ghost btn-sm" onclick="clearSearch()">Clear</button>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">📜 Recent Investments</span>
+                    <button class="btn btn-ghost btn-sm" onclick="navByName('history')">All →</button>
                 </div>
-
-                <div class="projects-grid" id="discoverGrid">
-                    <div class="loading-center" style="grid-column:1/-1"><div class="spinner"></div></div>
+                <div class="card-body" id="overviewInv">
+                    <div class="load-center"><div class="spinner"></div></div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- SECTION: My Investments -->
-            <section class="section" id="sec-history">
-                <div class="section-header">
-                    <h1 class="section-title">My Investment History</h1>
-                    <p class="section-sub">A complete log of every investment you have made.</p>
+        <!-- DISCOVER -->
+        <section class="section" id="sec-discover">
+            <div class="section-header">
+                <div class="section-title">Discover Projects</div>
+                <div class="section-sub">Browse and invest in active projects.</div>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="srchTitle" placeholder="Search by project name...">
+                <select id="srchCat"><option value="">All Categories</option></select>
+                <button class="btn btn-primary btn-sm" onclick="doSearch()">Search</button>
+                <button class="btn btn-ghost btn-sm" onclick="clearSearch()">Clear</button>
+            </div>
+            <div id="discoverContainer">
+                <div class="load-center"><div class="spinner"></div></div>
+            </div>
+        </section>
+
+        <!-- HISTORY -->
+        <section class="section" id="sec-history">
+            <div class="section-header">
+                <div class="section-title">My Investment History</div>
+                <div class="section-sub">A log of every investment you have made.</div>
+            </div>
+            <div class="card">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th><th>Project</th><th>Category</th>
+                                <th>Amount (PKR)</th><th>Funded %</th>
+                                <th>Status</th><th>Date</th><th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="histBody">
+                            <tr><td colspan="8"><div class="load-center"><div class="spinner"></div></div></td></tr>
+                        </tbody>
+                    </table>
                 </div>
+                <div class="pagination" id="histPag"></div>
+            </div>
+        </section>
 
-                <div class="card">
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Project</th>
-                                    <th>Category</th>
-                                    <th>Entrepreneur</th>
-                                    <th>Invested (PKR)</th>
-                                    <th>Project Status</th>
-                                    <th>Funding Progress</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody id="historyTableBody">
-                                <tr><td colspan="7"><div class="loading-center"><div class="spinner"></div></div></td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-        </div>
-    </main>
+    </div>
+</main>
 </div>
 
 <!-- Invest Modal -->
@@ -156,21 +145,19 @@
     <div class="modal">
         <div class="modal-header">
             <span class="modal-title">💰 Invest in Project</span>
-            <button class="modal-close" onclick="closeInvestModal()">✕</button>
+            <button class="modal-close" onclick="closeModal('investModal')">✕</button>
         </div>
         <div class="modal-body">
-            <div id="investProjectInfo" style="margin-bottom:20px;padding:16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid var(--border);"></div>
+            <div id="investInfo" style="padding:14px;background:var(--navy-800);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;font-size:0.85rem;"></div>
             <div class="form-group">
                 <label>Investment Amount (PKR) *</label>
-                <input type="number" id="investAmount" placeholder="Enter amount, e.g. 50000" min="1">
+                <input type="number" id="investAmt" placeholder="e.g. 50000" min="1">
             </div>
             <div class="alert" id="investAlert"></div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-ghost" onclick="closeInvestModal()">Cancel</button>
-            <button class="btn btn-primary" style="width:auto;" id="confirmInvestBtn" onclick="confirmInvest()">
-                Confirm Investment
-            </button>
+            <button class="btn btn-ghost" onclick="closeModal('investModal')">Cancel</button>
+            <button class="btn btn-primary" style="width:auto;" id="investBtn" onclick="confirmInvest()">Confirm Investment</button>
         </div>
     </div>
 </div>
