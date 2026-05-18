@@ -5,11 +5,11 @@ const { requireAuth } = require('../middleware/auth');
 
 router.use(requireAuth);
 
-// GET all categories
+// GET /api/common/categories
 router.get('/categories', async (req, res) => {
     try {
-        const [categories] = await db.query('SELECT * FROM CATEGORY ORDER BY category_name');
-        res.json({ success: true, categories });
+        const [rows] = await db.query('SELECT category_id, category_name FROM CATEGORY ORDER BY category_name ASC');
+        res.json({ success: true, categories: rows });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }
