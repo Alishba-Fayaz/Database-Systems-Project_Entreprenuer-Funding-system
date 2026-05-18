@@ -9,216 +9,237 @@
 <body>
 <div class="dashboard-layout">
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-logo">
-                <div class="logo-icon">💎</div>
-                <span class="logo-name">VentureFlow</span>
-            </div>
-            <div class="sidebar-user-card">
-                <div class="user-avatar" id="sidebarAvatar">U</div>
-                <div class="user-info">
-                    <div class="user-name" id="sidebarName">Loading...</div>
-                    <div class="user-role" style="color:var(--green);">Member</div>
-                </div>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+             <div class="auth-logo-icon">
+    <img src="Untitled design.ico" alt="Logo">
+</div>
+            <span class="logo-name">VentureFlow</span>
+        </div>
+        <div class="user-card">
+            <div class="user-avatar" id="sideAvatar" style="background:var(--green);">U</div>
+            <div>
+                <div class="user-name" id="sideName">Loading...</div>
+                <div class="user-role" style="color:var(--green);">Member</div>
             </div>
         </div>
-        <nav class="sidebar-nav">
-            <div class="nav-section-label">Dashboard</div>
-            <div class="nav-item active" onclick="navigate('overview')">
-                <span class="nav-icon">🏠</span> Overview
-            </div>
-            <div class="nav-section-label">Account</div>
-            <div class="nav-item" onclick="navigate('verification')">
-                <span class="nav-icon">🪪</span> Verification
-            </div>
-            <div class="nav-section-label">Projects</div>
-            <div class="nav-item" onclick="navigate('browse')">
-                <span class="nav-icon">🌐</span> Browse Projects
-            </div>
-            <div class="nav-item" onclick="navigate('history')">
-                <span class="nav-icon">📜</span> My Contributions
-            </div>
-        </nav>
-        <div class="sidebar-footer">
-            <button class="btn btn-ghost" style="width:100%;" onclick="logout()">
-                🚪 Sign Out
-            </button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-label">Dashboard</div>
+        <div class="nav-item active" data-sec="overview" onclick="nav(this,'overview')">
+            <span class="icon">🏠</span> Overview
         </div>
-    </aside>
+        <div class="nav-label">Account</div>
+        <div class="nav-item" data-sec="verification" onclick="nav(this,'verification')">
+            <span class="icon">🪪</span> Verification
+        </div>
+        <div class="nav-label">Projects</div>
+        <div class="nav-item" data-sec="browse" onclick="nav(this,'browse')">
+            <span class="icon">🌐</span> Browse Projects
+        </div>
+        <div class="nav-item" data-sec="history" onclick="nav(this,'history')">
+            <span class="icon">📜</span> My Contributions
+        </div>
+    </nav>
+    <div class="sidebar-footer">
+        <button class="btn btn-ghost" style="width:100%;" onclick="logout()">🚪 Sign Out</button>
+    </div>
+</aside>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="topbar">
-            <div class="topbar-title" id="topbarTitle">Overview</div>
-            <div class="topbar-actions">
-                <span id="verificationBadge" style="font-size:0.8rem;"></span>
+<!-- MAIN -->
+<main class="main-content">
+    <div class="topbar">
+        <div class="topbar-title" id="topTitle">Overview</div>
+        <div class="topbar-actions">
+            <span id="verBadge" style="font-size:0.8rem;"></span>
+        </div>
+    </div>
+
+    <div class="page-content">
+
+        <!-- OVERVIEW -->
+        <section class="section active" id="sec-overview">
+            <div class="section-header">
+                <div class="section-title">Welcome to VentureFlow</div>
+                <div class="section-sub">Browse projects, verify your identity, and support ideas you believe in.</div>
             </div>
-        </div>
 
-        <div class="page-content">
-
-            <!-- SECTION: Overview -->
-            <section class="section active" id="sec-overview">
-                <div class="section-header">
-                    <h1 class="section-title">Welcome to VentureFlow</h1>
-                    <p class="section-sub">Browse projects, support innovators, and verify your identity.</p>
-                </div>
-
-                <!-- Verification Nudge -->
-                <div id="verificationNudge" style="display:none;margin-bottom:24px;">
-                    <div class="card" style="border-color:rgba(201,168,76,0.3);background:linear-gradient(135deg,rgba(201,168,76,0.05),var(--bg-2));">
-                        <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-                            <div>
-                                <div style="font-family:var(--font-head);font-weight:700;color:var(--gold);margin-bottom:4px;">🪪 Identity Verification Required</div>
-                                <div style="font-size:0.85rem;color:var(--text-3);">Verify your identity to unlock full platform access.</div>
-                            </div>
-                            <button class="btn btn-primary btn-sm" onclick="navigate('verification')">Verify Now</button>
+            <!-- Verification nudge banner -->
+            <div id="verNudge" style="display:none;margin-bottom:20px;">
+                <div class="card" style="border-color:rgba(59,130,246,0.3);">
+                    <div class="card-body flex-between" style="flex-wrap:wrap;gap:10px;">
+                        <div>
+                            <div style="font-weight:700;color:var(--accent-light);margin-bottom:3px;">🪪 Verify Your Identity</div>
+                            <div style="font-size:0.82rem;color:var(--text-3);">Submit your CNIC or other ID to complete your profile.</div>
                         </div>
+                        <button class="btn btn-primary btn-sm" onclick="navByName('verification')">Verify Now</button>
                     </div>
                 </div>
+            </div>
 
-                <div class="stats-grid">
-                    <div class="stat-card gold">
-                        <span class="stat-icon">💸</span>
-                        <div class="stat-value" id="stat-contributed">PKR 0</div>
-                        <div class="stat-label">Total Contributed</div>
-                    </div>
-                    <div class="stat-card green">
-                        <span class="stat-icon">🚀</span>
-                        <div class="stat-value" id="stat-projects-supported">0</div>
-                        <div class="stat-label">Projects Supported</div>
-                    </div>
-                    <div class="stat-card blue">
-                        <span class="stat-icon">🪪</span>
-                        <div class="stat-value" id="stat-verify-status">—</div>
-                        <div class="stat-label">Verification Status</div>
-                    </div>
+            <div class="stats-grid">
+                <div class="stat-card blue">
+                    <span class="stat-icon">💸</span>
+                    <div class="stat-value" id="st-contributed">PKR 0</div>
+                    <div class="stat-label">Total Contributed</div>
                 </div>
+                <div class="stat-card teal">
+                    <span class="stat-icon">🚀</span>
+                    <div class="stat-value" id="st-supported">0</div>
+                    <div class="stat-label">Projects Supported</div>
+                </div>
+                <div class="stat-card green">
+                    <span class="stat-icon">🪪</span>
+                    <div class="stat-value" id="st-vstatus">—</div>
+                    <div class="stat-label">Verification Status</div>
+                </div>
+            </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">🌟 Featured Active Projects</span>
-                        <button class="btn btn-ghost btn-sm" onclick="navigate('browse')">Browse All →</button>
-                    </div>
-                    <div class="card-body">
-                        <div class="projects-grid" id="featuredProjects">
-                            <div class="loading-center" style="grid-column:1/-1"><div class="spinner"></div></div>
-                        </div>
-                    </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🌟 Active Projects</span>
+                    <button class="btn btn-ghost btn-sm" onclick="navByName('browse')">Browse All →</button>
                 </div>
-            </section>
-
-            <!-- SECTION: Verification -->
-            <section class="section" id="sec-verification">
-                <div class="section-header">
-                    <h1 class="section-title">Identity Verification</h1>
-                    <p class="section-sub">Submit your ID details to verify your account.</p>
-                </div>
-
-                <div id="verificationStatus" style="margin-bottom:24px;">
-                    <div class="loading-center"><div class="spinner"></div></div>
-                </div>
-
-                <div class="form-panel" id="verificationFormPanel">
-                    <div class="form-panel-title">🪪 Submit Verification Details</div>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>ID Type *</label>
-                            <select id="idType">
-                                <option value="">— Select ID Type —</option>
-                                <option value="CNIC">CNIC (National ID Card)</option>
-                                <option value="Passport">Passport</option>
-                                <option value="Driver License">Driver's License</option>
-                                <option value="B-Form">B-Form (Under 18)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>ID Number *</label>
-                            <input type="text" id="idNumber" placeholder="e.g. 35202-1234567-1">
-                        </div>
-                    </div>
-                    <div style="margin-top:20px;">
-                        <button class="btn btn-primary" style="width:auto;padding:12px 32px;" id="verifyBtn" onclick="submitVerification()">
-                            Submit for Review
-                        </button>
-                    </div>
-                    <div class="alert" id="verifyAlert"></div>
-                </div>
-            </section>
-
-            <!-- SECTION: Browse Projects -->
-            <section class="section" id="sec-browse">
-                <div class="section-header">
-                    <h1 class="section-title">Browse Projects</h1>
-                    <p class="section-sub">Explore and contribute to active projects in your community.</p>
-                </div>
-
-                <div class="search-bar">
-                    <input type="text" id="browseSearch" placeholder="🔍  Search projects...">
-                    <select id="browseCategory">
-                        <option value="">All Categories</option>
-                    </select>
-                    <button class="btn btn-primary btn-sm" onclick="browseProjects()">Search</button>
-                    <button class="btn btn-ghost btn-sm" onclick="clearBrowse()">Clear</button>
-                </div>
-
-                <div class="projects-grid" id="browseGrid">
-                    <div class="loading-center" style="grid-column:1/-1"><div class="spinner"></div></div>
-                </div>
-            </section>
-
-            <!-- SECTION: Contribution History -->
-            <section class="section" id="sec-history">
-                <div class="section-header">
-                    <h1 class="section-title">My Contributions</h1>
-                    <p class="section-sub">A record of every project you've supported.</p>
-                </div>
-                <div class="card">
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Project</th>
-                                    <th>Category</th>
-                                    <th>Amount (PKR)</th>
-                                    <th>Project Status</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody id="historyBody">
-                                <tr><td colspan="5"><div class="loading-center"><div class="spinner"></div></div></td></tr>
-                            </tbody>
-                        </table>
+                <div class="card-body">
+                    <div class="projects-grid" id="featuredGrid">
+                        <div class="load-center" style="grid-column:1/-1"><div class="spinner"></div></div>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-        </div>
-    </main>
+        <!-- VERIFICATION -->
+        <section class="section" id="sec-verification">
+            <div class="section-header">
+                <div class="section-title">Identity Verification</div>
+                <div class="section-sub">Submit your ID details. Status is reviewed by admins.</div>
+            </div>
+
+            <!-- Status display -->
+            <div id="verStatusCard" style="margin-bottom:20px;">
+                <div class="load-center"><div class="spinner"></div></div>
+            </div>
+
+            <!-- Submit form (CREATE) -->
+            <div class="form-panel" id="verSubmitPanel" style="display:none;">
+                <div class="form-panel-title">🪪 Submit Verification</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>ID Type *</label>
+                        <select id="idType">
+                            <option value="">— Select —</option>
+                            <option value="CNIC">CNIC</option>
+                            <option value="Passport">Passport</option>
+                            <option value="Driver License">Driver's License</option>
+                            <option value="B-Form">B-Form</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>ID Number *</label>
+                        <input type="text" id="idNumber" placeholder="e.g. 35202-1234567-1">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" style="width:auto;padding:11px 28px;" id="verSubmitBtn" onclick="submitVerification()">
+                        Submit for Review
+                    </button>
+                </div>
+                <div class="alert" id="verSubmitAlert"></div>
+            </div>
+
+            <!-- Update form (UPDATE) -->
+            <div class="form-panel" id="verUpdatePanel" style="display:none;">
+                <div class="form-panel-title" id="verUpdateTitle">🔄 Update Verification</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>ID Type *</label>
+                        <select id="updIdType">
+                            <option value="">— Select —</option>
+                            <option value="CNIC">CNIC</option>
+                            <option value="Passport">Passport</option>
+                            <option value="Driver License">Driver's License</option>
+                            <option value="B-Form">B-Form</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>ID Number *</label>
+                        <input type="text" id="updIdNumber" placeholder="e.g. 35202-1234567-1">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" style="width:auto;padding:11px 28px;" id="verUpdateBtn" onclick="updateVerification()">
+                        Update Details
+                    </button>
+                </div>
+                <div class="alert" id="verUpdateAlert"></div>
+            </div>
+        </section>
+
+        <!-- BROWSE PROJECTS -->
+        <section class="section" id="sec-browse">
+            <div class="section-header">
+                <div class="section-title">Browse Projects</div>
+                <div class="section-sub">Explore active projects and contribute to ones you support.</div>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="browseTitle" placeholder="Search by name...">
+                <select id="browseCat"><option value="">All Categories</option></select>
+                <button class="btn btn-primary btn-sm" onclick="doBrowse()">Search</button>
+                <button class="btn btn-ghost btn-sm"   onclick="clearBrowse()">Clear</button>
+            </div>
+            <div id="browseContainer">
+                <div class="load-center"><div class="spinner"></div></div>
+            </div>
+        </section>
+
+        <!-- HISTORY -->
+        <section class="section" id="sec-history">
+            <div class="section-header">
+                <div class="section-title">My Contributions</div>
+                <div class="section-sub">Every project you have supported.</div>
+            </div>
+            <div class="card">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th><th>Project</th><th>Category</th>
+                                <th>Amount (PKR)</th><th>Project Status</th><th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="histBody">
+                            <tr><td colspan="6"><div class="load-center"><div class="spinner"></div></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="histPag"></div>
+            </div>
+        </section>
+
+    </div>
+</main>
 </div>
 
 <!-- Fund Modal -->
 <div class="modal-overlay" id="fundModal">
     <div class="modal">
         <div class="modal-header">
-            <span class="modal-title">🌱 Support this Project</span>
-            <button class="modal-close" onclick="closeFundModal()">✕</button>
+            <span class="modal-title">🌱 Support This Project</span>
+            <button class="modal-close" onclick="closeModal('fundModal')">✕</button>
         </div>
         <div class="modal-body">
-            <div id="fundProjectInfo" style="margin-bottom:20px;padding:16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid var(--border);"></div>
+            <div id="fundInfo" style="padding:14px;background:var(--navy-800);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;font-size:0.85rem;"></div>
             <div class="form-group">
-                <label>Your Contribution Amount (PKR) *</label>
-                <input type="number" id="fundAmount" placeholder="e.g. 5000" min="1">
+                <label>Contribution Amount (PKR) *</label>
+                <input type="number" id="fundAmt" placeholder="e.g. 5000" min="1">
             </div>
             <div class="alert" id="fundAlert"></div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-ghost" onclick="closeFundModal()">Cancel</button>
-            <button class="btn btn-primary" style="width:auto;" id="confirmFundBtn" onclick="confirmFund()">
-                Confirm Contribution
-            </button>
+            <button class="btn btn-ghost" onclick="closeModal('fundModal')">Cancel</button>
+            <button class="btn btn-primary" style="width:auto;" id="fundBtn" onclick="confirmFund()">Confirm Contribution</button>
         </div>
     </div>
 </div>
