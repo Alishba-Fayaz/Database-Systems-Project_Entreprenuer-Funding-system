@@ -9,200 +9,233 @@
 <body>
 <div class="dashboard-layout">
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-logo">
-                <div class="logo-icon">💎</div>
-                <span class="logo-name">VentureFlow</span>
-            </div>
-            <div class="sidebar-user-card">
-                <div class="user-avatar" id="sidebarAvatar">E</div>
-                <div class="user-info">
-                    <div class="user-name" id="sidebarName">Loading...</div>
-                    <div class="user-role">Entrepreneur</div>
-                </div>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+             <div class="auth-logo-icon">
+    <img src="Untitled design.ico" alt="Logo">
+</div>
+            <span class="logo-name">VentureFlow</span>
+        </div>
+        <div class="user-card">
+            <div class="user-avatar" id="sideAvatar">E</div>
+            <div>
+                <div class="user-name" id="sideName">Loading...</div>
+                <div class="user-role">Entrepreneur</div>
             </div>
         </div>
-        <nav class="sidebar-nav">
-            <div class="nav-section-label">Dashboard</div>
-            <div class="nav-item active" onclick="navigate('overview')">
-                <span class="nav-icon">📊</span> Overview
-            </div>
-
-            <div class="nav-section-label">Projects</div>
-            <div class="nav-item" onclick="navigate('create')">
-                <span class="nav-icon">➕</span> Create Project
-            </div>
-            <div class="nav-item" onclick="navigate('myprojects')">
-                <span class="nav-icon">📁</span> My Projects
-            </div>
-            <div class="nav-item" onclick="navigate('funding')">
-                <span class="nav-icon">💰</span> Funding Tracker
-            </div>
-        </nav>
-        <div class="sidebar-footer">
-            <button class="btn btn-ghost" style="width:100%;" onclick="logout()">
-                🚪 Sign Out
-            </button>
+    </div>
+    <nav class="sidebar-nav">
+        <div class="nav-label">Dashboard</div>
+        <div class="nav-item active" data-sec="overview" onclick="nav(this,'overview')">
+            <span class="icon">📊</span> Overview
         </div>
-    </aside>
+        <div class="nav-label">Projects</div>
+        <div class="nav-item" data-sec="create" onclick="nav(this,'create')">
+            <span class="icon">➕</span> Create Project
+        </div>
+        <div class="nav-item" data-sec="myprojects" onclick="nav(this,'myprojects')">
+            <span class="icon">📁</span> My Projects
+        </div>
+        <div class="nav-item" data-sec="funding" onclick="nav(this,'funding')">
+            <span class="icon">💰</span> Funding Tracker
+        </div>
+    </nav>
+    <div class="sidebar-footer">
+        <button class="btn btn-ghost" style="width:100%;" onclick="logout()">🚪 Sign Out</button>
+    </div>
+</aside>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="topbar">
-            <div class="topbar-title" id="topbarTitle">Overview</div>
-            <div class="topbar-actions">
-                <button class="btn btn-primary btn-sm" onclick="navigate('create')">
-                    + New Project
-                </button>
+<!-- MAIN -->
+<main class="main-content">
+    <div class="topbar">
+        <div class="topbar-title" id="topTitle">Overview</div>
+        <div class="topbar-actions">
+            <button class="btn btn-primary btn-sm" onclick="navByName('create')">+ New Project</button>
+        </div>
+    </div>
+
+    <div class="page-content">
+
+        <!-- OVERVIEW -->
+        <section class="section active" id="sec-overview">
+            <div class="section-header">
+                <div class="section-title">Dashboard Overview</div>
+                <div class="section-sub">Your projects and funding at a glance.</div>
             </div>
-        </div>
+            <div class="stats-grid">
+                <div class="stat-card blue">
+                    <span class="stat-icon">📁</span>
+                    <div class="stat-value" id="st-total">—</div>
+                    <div class="stat-label">Total Projects</div>
+                </div>
+                <div class="stat-card green">
+                    <span class="stat-icon">🟢</span>
+                    <div class="stat-value" id="st-active">—</div>
+                    <div class="stat-label">Active</div>
+                </div>
+                <div class="stat-card teal">
+                    <span class="stat-icon">🏆</span>
+                    <div class="stat-value" id="st-funded">—</div>
+                    <div class="stat-label">Funded</div>
+                </div>
+                <div class="stat-card gold">
+                    <span class="stat-icon">💵</span>
+                    <div class="stat-value" id="st-raised">—</div>
+                    <div class="stat-label">Total Raised (PKR)</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">📋 Recent Projects</span>
+                    <button class="btn btn-ghost btn-sm" onclick="navByName('myprojects')">All Projects →</button>
+                </div>
+                <div class="card-body" id="overviewList">
+                    <div class="load-center"><div class="spinner"></div></div>
+                </div>
+            </div>
+        </section>
 
-        <div class="page-content">
+        <!-- CREATE PROJECT -->
+        <section class="section" id="sec-create">
+            <div class="section-header">
+                <div class="section-title">Create New Project</div>
+                <div class="section-sub">Fill in the details below to launch a project.</div>
+            </div>
+            <div class="form-panel">
+                <div class="form-panel-title">🚀 Project Details</div>
+                <div class="form-grid">
+                    <div class="form-group full">
+                        <label>Project Title *</label>
+                        <input type="text" id="pTitle" placeholder="e.g. Smart Irrigation System">
+                    </div>
+                    <div class="form-group full">
+                        <label>Description</label>
+                        <textarea id="pDesc" placeholder="Describe the project, its goals, and how the funds will be used..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Category *</label>
+                        <select id="pCat"><option value="">— Select —</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Funding Goal (PKR) *</label>
+                        <input type="number" id="pGoal" placeholder="e.g. 500000" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Deadline *</label>
+                        <input type="date" id="pDeadline">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" style="width:auto;padding:11px 28px;" id="createBtn" onclick="createProject()">
+                        Submit Project
+                    </button>
+                </div>
+                <div class="alert" id="createAlert"></div>
+            </div>
+        </section>
 
-            <!-- SECTION: Overview -->
-            <section class="section active" id="sec-overview">
-                <div class="section-header">
-                    <h1 class="section-title">Dashboard Overview</h1>
-                    <p class="section-sub">Track your entrepreneurial journey at a glance.</p>
-                </div>
-                <div class="stats-grid" id="statsGrid">
-                    <div class="stat-card gold">
-                        <span class="stat-icon">📁</span>
-                        <div class="stat-value" id="stat-total">—</div>
-                        <div class="stat-label">Total Projects</div>
-                    </div>
-                    <div class="stat-card green">
-                        <span class="stat-icon">🟢</span>
-                        <div class="stat-value" id="stat-active">—</div>
-                        <div class="stat-label">Active Projects</div>
-                    </div>
-                    <div class="stat-card blue">
-                        <span class="stat-icon">🏆</span>
-                        <div class="stat-value" id="stat-funded">—</div>
-                        <div class="stat-label">Fully Funded</div>
-                    </div>
-                    <div class="stat-card red">
-                        <span class="stat-icon">💵</span>
-                        <div class="stat-value" id="stat-raised">—</div>
-                        <div class="stat-label">Total Raised (PKR)</div>
-                    </div>
-                </div>
+        <!-- MY PROJECTS -->
+        <section class="section" id="sec-myprojects">
+            <div class="section-header">
+                <div class="section-title">My Projects</div>
+                <div class="section-sub">All projects you have created.</div>
+            </div>
+            <div id="myProjContainer">
+                <div class="load-center"><div class="spinner"></div></div>
+            </div>
+        </section>
 
-                <!-- Recent Projects Preview -->
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">📋 Recent Projects</span>
-                        <button class="btn btn-ghost btn-sm" onclick="navigate('myprojects')">View All →</button>
-                    </div>
-                    <div class="card-body">
-                        <div id="overviewProjectsList">
-                            <div class="loading-center"><div class="spinner"></div></div>
-                        </div>
-                    </div>
+        <!-- FUNDING TRACKER -->
+        <section class="section" id="sec-funding">
+            <div class="section-header">
+                <div class="section-title">Funding Tracker</div>
+                <div class="section-sub">Live funding status for all your projects.</div>
+            </div>
+            <div class="card">
+                <div class="card-header"><span class="card-title">💰 Funding Status Table</span></div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th><th>Project</th><th>Category</th>
+                                <th>Goal (PKR)</th><th>Raised (PKR)</th>
+                                <th>Remaining (PKR)</th><th>Progress</th><th>Status</th><th>Deadline</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fundBody">
+                            <tr><td colspan="9"><div class="load-center"><div class="spinner"></div></div></td></tr>
+                        </tbody>
+                    </table>
                 </div>
-            </section>
+                <div class="pagination" id="fundPag"></div>
+            </div>
+        </section>
 
-            <!-- SECTION: Create Project -->
-            <section class="section" id="sec-create">
-                <div class="section-header">
-                    <h1 class="section-title">Create New Project</h1>
-                    <p class="section-sub">Submit your project for funding consideration.</p>
-                </div>
-
-                <div class="form-panel">
-                    <div class="form-panel-title">🚀 Project Details</div>
-                    <div class="form-grid">
-                        <div class="form-group full">
-                            <label>Project Title *</label>
-                            <input type="text" id="pTitle" placeholder="Enter a compelling title for your project">
-                        </div>
-                        <div class="form-group full">
-                            <label>Description</label>
-                            <textarea id="pDesc" placeholder="Describe your project, its goals, and how funds will be used..."></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Category *</label>
-                            <select id="pCategory">
-                                <option value="">— Select Category —</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Funding Goal (PKR) *</label>
-                            <input type="number" id="pGoal" placeholder="e.g. 500000" min="1">
-                        </div>
-                        <div class="form-group">
-                            <label>Deadline *</label>
-                            <input type="date" id="pDeadline">
-                        </div>
-                    </div>
-                    <div style="margin-top: 20px;">
-                        <button class="btn btn-primary" style="width:auto;padding:12px 32px;" id="createBtn" onclick="createProject()">
-                            Submit Project
-                        </button>
-                    </div>
-                    <div class="alert" id="createAlert"></div>
-                </div>
-            </section>
-
-            <!-- SECTION: My Projects -->
-            <section class="section" id="sec-myprojects">
-                <div class="section-header">
-                    <h1 class="section-title">My Projects</h1>
-                    <p class="section-sub">All projects you've created on VentureFlow.</p>
-                </div>
-                <div class="projects-grid" id="myProjectsGrid">
-                    <div class="loading-center"><div class="spinner"></div></div>
-                </div>
-            </section>
-
-            <!-- SECTION: Funding Tracker -->
-            <section class="section" id="sec-funding">
-                <div class="section-header">
-                    <h1 class="section-title">Funding Tracker</h1>
-                    <p class="section-sub">Monitor the funding progress of all your projects.</p>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">💰 Live Funding Status</span>
-                    </div>
-                    <div class="table-wrap">
-                        <table id="fundingTable">
-                            <thead>
-                                <tr>
-                                    <th>Project</th>
-                                    <th>Category</th>
-                                    <th>Goal (PKR)</th>
-                                    <th>Raised (PKR)</th>
-                                    <th>Remaining (PKR)</th>
-                                    <th>Progress</th>
-                                    <th>Status</th>
-                                    <th>Deadline</th>
-                                </tr>
-                            </thead>
-                            <tbody id="fundingTableBody">
-                                <tr><td colspan="8"><div class="loading-center"><div class="spinner"></div></div></td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-        </div>
-    </main>
+    </div><!-- /page-content -->
+</main>
 </div>
 
-<!-- Investment Detail Modal -->
-<div class="modal-overlay" id="investModal">
+<!-- Edit Project Modal -->
+<div class="modal-overlay" id="editModal">
     <div class="modal">
         <div class="modal-header">
+            <span class="modal-title">✏️ Edit Project</span>
+            <button class="modal-close" onclick="closeModal('editModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="editId">
+            <div class="form-group">
+                <label>Title *</label>
+                <input type="text" id="editTitle">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="editDesc"></textarea>
+            </div>
+            <div class="form-grid" style="margin-top:0;">
+                <div class="form-group">
+                    <label>Category *</label>
+                    <select id="editCat"><option value="">— Select —</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="editStatus">
+                        <option value="Active">Active</option>
+                        <option value="Funded">Funded</option>
+                        <option value="Closed">Closed</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Funding Goal (PKR) *</label>
+                    <input type="number" id="editGoal" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Deadline *</label>
+                    <input type="date" id="editDeadline">
+                </div>
+            </div>
+            <div class="alert" id="editAlert"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('editModal')">Cancel</button>
+            <button class="btn btn-primary" style="width:auto;" id="editSaveBtn" onclick="saveEdit()">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- Investments Detail Modal -->
+<div class="modal-overlay" id="invModal">
+    <div class="modal" style="max-width:520px;">
+        <div class="modal-header">
             <span class="modal-title">📈 Investment Details</span>
-            <button class="modal-close" onclick="closeModal()">✕</button>
+            <button class="modal-close" onclick="closeModal('invModal')">✕</button>
         </div>
-        <div class="modal-body" id="investModalBody">
-            <div class="loading-center"><div class="spinner"></div></div>
+        <div class="modal-body" id="invBody">
+            <div class="load-center"><div class="spinner"></div></div>
         </div>
+        <div class="pagination" id="invPag" style="padding-bottom:12px;"></div>
     </div>
 </div>
 
