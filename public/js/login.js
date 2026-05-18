@@ -1,149 +1,131 @@
-// ============================================
-// VentureFlow — Login / Signup Logic
-// ============================================
+// login.js — Handles Sign In and Sign Up
 
-const tabs = document.querySelectorAll('.auth-tab');
-
-function switchTab(tab) {
-    const loginForm = document.getElementById('loginForm');
-    const signupForm = document.getElementById('signupForm');
-    tabs.forEach(t => t.classList.remove('active'));
-
-    if (tab === 'login') {
-        loginForm.style.display = 'block';
-        signupForm.style.display = 'none';
-        tabs[0].classList.add('active');
-    } else {
-        loginForm.style.display = 'none';
-        signupForm.style.display = 'block';
-        tabs[1].classList.add('active');
-        loadRoles();
-    }
-}
-
-// Allow pressing Enter in inputs
-document.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-        const loginForm = document.getElementById('loginForm');
-        if (loginForm.style.display !== 'none') {
-            handleLogin();
-        } else {
-            handleSignup();
+// On page load: redirect if already logged in, and load roles
+window.addEventListener('load', async () => {
+    // If already logged in, redirect immediately
+    try {
+        const res  = await fetch('/api/auth/me');
+        const data = await res.json();
+        if (data.success) {
+            redirectByRole(data.user.role_id);
+            return;
         }
-    }
+    } catch (e) { /* not logged in, stay on page */ }
+
+    // Load roles for Sign Up dropdown
+    loadRoles();
 });
 
-function showAlert(id, message, type = 'error') {
-    const el = document.getElementById(id);
-    el.className = `alert alert-${type} show`;
-    el.innerHTML = (type === 'error' ? '⚠️ ' : '✅ ') + message;
-    setTimeout(() => el.classList.remove('show'), 5000);
-}
+// Allow Enter key to submit
+document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const signinVisible = document.getElementById('formSignin').style.display !== 'none';
+    if (signinVisible) doLogin(); else doSignup();
+});
 
-function setLoading(btnId, loading, label = '') {
-    const btn = document.getElementById(btnId);
-    if (loading) {
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span>';
-    } else {
-        btn.disabled = false;
-        btn.innerHTML = label;
-    }
+function showTab(tab) {
+    document.getElementById('formSignin').style.display = tab === 'signin' ? 'block' : 'none';
+    document.getElementById('formSignup').style.display = tab === 'signup' ? 'block' : 'none';
+    document.getElementById('tabSignin').classList.toggle('active', tab === 'signin');
+    document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
 }
 
 async function loadRoles() {
-    const select = document.getElementById('signupRole');
-    if (select.children.length > 1) return; // already loaded
+    const sel = document.getElementById('signupRole');
+    if (sel.options.length > 1) return;
     try {
-        const res = await fetch('/api/auth/roles');
+        const res  = await fetch('/api/auth/roles');
         const data = await res.json();
         if (data.success) {
             data.roles.forEach(r => {
-                const opt = document.createElement('option');
-                opt.value = r.role_id;
+                const opt    = document.createElement('option');
+                opt.value    = r.role_id;
                 opt.textContent = r.role_name;
-                select.appendChild(opt);
+                sel.appendChild(opt);
             });
         }
-    } catch (e) {
-        console.error('Failed to load roles:', e);
-    }
+    } catch (e) { console.error('Could not load roles.'); }
 }
 
-async function handleLogin() {
-    const email = document.getElementById('loginEmail').value.trim();
+async function doLogin() {
+    const email    = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
+
     if (!email || !password) {
-        showAlert('loginAlert', 'Please enter your email and password.');
-        return;
+        return showAlert('loginAlert', 'Please fill in both fields.', 'error');
     }
-    setLoading('loginBtn', true);
+
+    setBtn('loginBtn', true, 'Sign In');
     try {
-        const res = await fetch('/api/auth/login', {
+        const res  = await fetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
         const data = await res.json();
+
         if (data.success) {
             showAlert('loginAlert', 'Login successful! Redirecting...', 'success');
-            setTimeout(() => window.location.href = data.redirect, 800);
+            setTimeout(() => window.location.href = data.redirect, 700);
         } else {
-            showAlert('loginAlert', data.message || 'Login failed.');
-            setLoading('loginBtn', false, 'Sign In');
+            showAlert('loginAlert', data.message, 'error');
+            setBtn('loginBtn', false, 'Sign In');
         }
     } catch (e) {
-        showAlert('loginAlert', 'Server error. Make sure the backend is running.');
-        setLoading('loginBtn', false, 'Sign In');
+        showAlert('loginAlert', 'Cannot connect to server. Is it running?', 'error');
+        setBtn('loginBtn', false, 'Sign In');
     }
 }
 
-async function handleSignup() {
-    const name = document.getElementById('signupName').value.trim();
-    const email = document.getElementById('signupEmail').value.trim();
+async function doSignup() {
+    const name     = document.getElementById('signupName').value.trim();
+    const email    = document.getElementById('signupEmail').value.trim();
     const password = document.getElementById('signupPassword').value;
-    const role_id = document.getElementById('signupRole').value;
+    const role_id  = document.getElementById('signupRole').value;
 
     if (!name || !email || !password || !role_id) {
-        showAlert('signupAlert', 'All fields are required.');
-        return;
+        return showAlert('signupAlert', 'All fields are required.', 'error');
     }
-    if (password.length < 6) {
-        showAlert('signupAlert', 'Password must be at least 6 characters.');
-        return;
+    if (!email.includes('@')) {
+        return showAlert('signupAlert', 'Email must contain @.', 'error');
     }
 
-    setLoading('signupBtn', true);
+    setBtn('signupBtn', true, 'Create Account');
     try {
-        const res = await fetch('/api/auth/signup', {
+        const res  = await fetch('/api/auth/signup', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, email, password, role_id })
         });
         const data = await res.json();
+
         if (data.success) {
-            showAlert('signupAlert', data.message, 'success');
-            setTimeout(() => switchTab('login'), 1500);
+            showAlert('signupAlert', data.message + ' You can now sign in.', 'success');
+            setTimeout(() => showTab('signin'), 1500);
         } else {
-            showAlert('signupAlert', data.message || 'Sign up failed.');
+            showAlert('signupAlert', data.message, 'error');
         }
-        setLoading('signupBtn', false, 'Create Account');
     } catch (e) {
-        showAlert('signupAlert', 'Server error. Make sure the backend is running.');
-        setLoading('signupBtn', false, 'Create Account');
+        showAlert('signupAlert', 'Cannot connect to server.', 'error');
     }
+    setBtn('signupBtn', false, 'Create Account');
 }
 
-// Check if already logged in
-(async () => {
-    try {
-        const res = await fetch('/api/auth/me');
-        const data = await res.json();
-        if (data.success) {
-            const role = data.user.role_id;
-            if (role === 2) window.location.href = '/entrepreneur';
-            else if (role === 3) window.location.href = '/investor';
-            else window.location.href = '/dashboard';
-        }
-    } catch (e) { /* not logged in */ }
-})();
+function redirectByRole(role_id) {
+    if (role_id === 2) window.location.href = '/entrepreneur';
+    else if (role_id === 3) window.location.href = '/investor';
+    else window.location.href = '/dashboard';
+}
+
+function showAlert(id, msg, type) {
+    const el = document.getElementById(id);
+    el.className = 'alert alert-' + type + ' show';
+    el.textContent = msg;
+    setTimeout(() => el.classList.remove('show'), 5000);
+}
+
+function setBtn(id, loading, label) {
+    const b = document.getElementById(id);
+    b.disabled   = loading;
+    b.innerHTML  = loading ? '<span class="spinner"></span>' : label;
+}
